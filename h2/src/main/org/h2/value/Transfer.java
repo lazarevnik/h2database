@@ -515,6 +515,11 @@ public class Transfer {
                 writeString(v.getString());
             }
             break;
+        case Value.JSON: {
+            writeInt(Value.JSON);
+            writeString(v.getString());
+            break;
+        }
         default:
             if (JdbcUtils.customDataTypesHandler != null) {
                 writeBytes(v.getBytesNoCopy());
@@ -682,6 +687,10 @@ public class Transfer {
                 return ValueGeometry.get(readBytes());
             }
             return ValueGeometry.get(readString());
+        case Value.JSON: {
+            String s = readString();
+            return ValueJson.get(s);
+        }
         default:
             if (JdbcUtils.customDataTypesHandler != null) {
                 return JdbcUtils.customDataTypesHandler.convert(
