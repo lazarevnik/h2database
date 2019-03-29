@@ -37,6 +37,7 @@ import org.h2.value.ValueFloat;
 import org.h2.value.ValueGeometry;
 import org.h2.value.ValueInt;
 import org.h2.value.ValueJavaObject;
+import org.h2.value.ValueJson;
 import org.h2.value.ValueLobDb;
 import org.h2.value.ValueLong;
 import org.h2.value.ValueNull;
@@ -70,6 +71,7 @@ public class ValueDataType implements DataType {
     private static final int BYTES_0_31 = 100;
     private static final int SPATIAL_KEY_2D = 132;
     private static final int CUSTOM_DATA_TYPE = 133;
+    private static final int JSON = 134;
 
     final DataHandler handler;
     final CompareMode compareMode;
@@ -430,6 +432,12 @@ public class ValueDataType implements DataType {
                 put(b);
             break;
         }
+        case Value.JSON:{
+            String s = v.getString();
+            buff.put((byte) JSON);
+            writeString(buff, s);
+            break;
+        }
         default:
             if (JdbcUtils.customDataTypesHandler != null) {
                 byte[] b = v.getBytesNoCopy();
@@ -611,6 +619,10 @@ public class ValueDataType implements DataType {
             }
             throw DbException.get(ErrorCode.UNKNOWN_DATA_TYPE_1,
                     "No CustomDataTypesHandler has been set up");
+        }
+        case JSON: {
+            String str = readString(buff);
+            return ValueJson.get(str);
         }
         default:
             if (type >= INT_0_15 && type < INT_0_15 + 16) {

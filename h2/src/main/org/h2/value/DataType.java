@@ -382,6 +382,11 @@ public class DataType {
                 new String[]{"ENUM"},
                 48
         );
+        add(Value.JSON, Types.OTHER,
+                createString(false),
+                new String[]{"JSON"},
+                32
+        );
         for (Integer i : TYPES_BY_VALUE_TYPE.keySet()) {
             Value.getOrder(i);
         }
@@ -720,6 +725,16 @@ public class DataType {
                 }
                 return ValueGeometry.getFromGeometry(x);
             }
+            case Value.JSON: {
+                Object x = rs.getObject(columnIndex);
+                if(x == null) {
+                    return ValueNull.INSTANCE;
+                } else if (x.getClass()== String.class) {
+                    return ValueJson.get((String) x);
+                } else {
+                    return ValueJson.get(x.toString());
+                }
+            }
             default:
                 if (JdbcUtils.customDataTypesHandler != null) {
                     return JdbcUtils.customDataTypesHandler.getValue(type,
@@ -808,6 +823,8 @@ public class DataType {
             return ResultSet.class.getName();
         case Value.GEOMETRY:
             return GEOMETRY_CLASS_NAME;
+        case Value.JSON:
+            return String.class.getName();
         default:
             if (JdbcUtils.customDataTypesHandler != null) {
                 return JdbcUtils.customDataTypesHandler.getDataTypeClassName(type);
@@ -860,6 +877,8 @@ public class DataType {
             case Types.JAVA_OBJECT:
                 if (sqlTypeName.equalsIgnoreCase("geometry")) {
                     return Value.GEOMETRY;
+                } else if (sqlTypeName.equalsIgnoreCase("json")) {
+                    return Value.JSON;
                 }
         }
         return convertSQLTypeToValueType(sqlType);

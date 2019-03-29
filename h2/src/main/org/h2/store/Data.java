@@ -41,6 +41,7 @@ import org.h2.value.ValueFloat;
 import org.h2.value.ValueGeometry;
 import org.h2.value.ValueInt;
 import org.h2.value.ValueJavaObject;
+import org.h2.value.ValueJson;
 import org.h2.value.ValueLob;
 import org.h2.value.ValueLobDb;
 import org.h2.value.ValueLong;
@@ -90,6 +91,7 @@ public class Data {
     private static final int LOCAL_TIME = 132;
     private static final int LOCAL_DATE = 133;
     private static final int LOCAL_TIMESTAMP = 134;
+    private static final int JSON = 136;
 
     private static final long MILLIS_PER_MINUTE = 1000 * 60;
 
@@ -693,6 +695,11 @@ public class Data {
             }
             break;
         }
+        case Value.JSON: {
+            writeByte((byte) JSON);
+            writeString(v.getString());
+            break;
+        }
         default:
             DbException.throwInternalError("type=" + v.getType());
         }
@@ -877,6 +884,10 @@ public class Data {
                 rs.addRow(o);
             }
             return ValueResultSet.get(rs);
+        }
+        case JSON: {
+            String s = readString();
+            return ValueJson.get(s);
         }
         default:
             if (type >= INT_0_15 && type < INT_0_15 + 16) {
@@ -1125,6 +1136,9 @@ public class Data {
             }
             return len;
         }
+        case Value.JSON:
+            String s = v.getString();
+            return 1 + getStringLen(s);
         default:
             throw DbException.throwInternalError("type=" + v.getType());
         }
