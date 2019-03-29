@@ -173,11 +173,17 @@ public abstract class Value {
      * The value type for ENUM values.
      */
     public static final int ENUM = 25;
+    
+
+    /**
+     * The value type for JSON values.
+     */
+    public static final int JSON = 26;
 
     /**
      * The number of value types.
      */
-    public static final int TYPE_COUNT = ENUM;
+    public static final int TYPE_COUNT = JSON;
 
     private static SoftReference<Value[]> softCache =
             new SoftReference<>(null);
@@ -341,6 +347,8 @@ public abstract class Value {
             return 43_000;
         case GEOMETRY:
             return 44_000;
+        case JSON:
+            return 46_000;
         case ARRAY:
             return 50_000;
         case RESULT_SET:
@@ -1106,6 +1114,8 @@ public abstract class Value {
                 return ValueUuid.get(s);
             case GEOMETRY:
                 return ValueGeometry.get(s);
+            case Value.JSON:
+                return convertToJson();
             default:
                 if (JdbcUtils.customDataTypesHandler != null) {
                     return JdbcUtils.customDataTypesHandler.convert(this, targetType);
@@ -1234,6 +1244,42 @@ public abstract class Value {
                     ErrorCode.NUMERIC_VALUE_OUT_OF_RANGE_2, x.toString(), getColumnName(column));
         }
         return x.setScale(0, BigDecimal.ROUND_HALF_UP).longValue();
+    }
+
+
+    private ValueJson convertToJson() {
+        switch (getType()) {
+        case BOOLEAN:
+            return ValueJson.get(getBoolean());
+        case BYTE:
+        case SHORT:
+        case INT:
+            return ValueJson.get(getInt());
+        case LONG:
+            return ValueJson.get(getLong());
+        case FLOAT:
+        case DOUBLE:
+        case DECIMAL:
+            return ValueJson.get(getBigDecimal());
+        case BYTES:
+        case BLOB:
+            return ValueJson.get(getBytesNoCopy());
+        case STRING:
+        case STRING_IGNORECASE:
+        case STRING_FIXED:
+        case CLOB:
+            return ValueJson.get(getString());
+        default:
+            throw getDataConversionError(Value.JSON);
+        }
+    }
+    
+
+    DbException getDataConversionError(int targetType) {
+        DataType from = DataType.getDataType(getType());
+        DataType to = DataType.getDataType(targetType);
+        throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, (from != null ? from.name : "type=" + getType())
+                + " to " + (to != null ? to.name : "type=" + targetType));
     }
 
     private static String getColumnName(Object column) {
