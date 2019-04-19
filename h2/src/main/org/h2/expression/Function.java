@@ -58,6 +58,7 @@ import org.h2.value.ValueBytes;
 import org.h2.value.ValueDate;
 import org.h2.value.ValueDouble;
 import org.h2.value.ValueInt;
+import org.h2.value.ValueJson;
 import org.h2.value.ValueLong;
 import org.h2.value.ValueNull;
 import org.h2.value.ValueResultSet;
@@ -133,6 +134,11 @@ public class Function extends Expression implements FunctionCall {
      * Used in MySQL-style INSERT ... ON DUPLICATE KEY UPDATE ... VALUES
      */
     public static final int VALUES = 250;
+
+    /**
+     * JSON functions
+     */
+    public static final int JSON_EXISTS = 260, JSON_EXTRACT = 261, JSON_QUERY = 262;
 
     /**
      * This is called H2VERSION() and not VERSION(), because we return a fake
@@ -466,6 +472,10 @@ public class Function extends Expression implements FunctionCall {
 
         // ON DUPLICATE KEY VALUES function
         addFunction("VALUES", VALUES, 1, Value.NULL, false, true, false);
+
+        addFunction("JSON_EXISTS", JSON_EXISTS, 2, Value.BOOLEAN, false, true, false);
+        addFunction("JSON_EXTRACT", JSON_EXTRACT, 2, Value.STRING, false, true, false);
+        addFunction("JSON_QUERY", JSON_QUERY, 2, Value.JSON, false, true, false);
     }
 
     protected Function(Database database, FunctionInfo info) {
@@ -1649,6 +1659,18 @@ public class Function extends Expression implements FunctionCall {
             }
             String msgText = v1.getString();
             throw DbException.fromUser(sqlState, msgText);
+        }
+        case JSON_EXISTS: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            return json.exists(v1.getString());
+        }
+        case JSON_EXTRACT: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            return json.extract(v1.getString());
+        }
+        case JSON_QUERY: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            return json.extract(v1.getString());
         }
         default:
             throw DbException.throwInternalError("type=" + info.type);

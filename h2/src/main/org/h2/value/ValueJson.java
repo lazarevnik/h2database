@@ -6,7 +6,11 @@ import java.sql.SQLException;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.util.StringUtils;
+import org.h2.util.json.JSONObject;
+import org.h2.util.json.JSONPath;
 import org.h2.util.json.JSONStringSource;
+import org.h2.util.json.JSONValue;
+import org.h2.util.json.JSONValueTarget;
 
 public class ValueJson extends Value {
 
@@ -31,11 +35,14 @@ public class ValueJson extends Value {
     public static final ValueJson ZERO = new ValueJson("0");
 
     private final String value;
+    private final JSONValue parsed;
 
     private ValueJson(String value) {
         this.value = value;
+        JSONValueTarget target = new JSONValueTarget();
+        JSONStringSource.parse(this.value, target);
+        this.parsed = target.getResult();
     }
-    
     @Override
     public String getSQL() {
         return StringUtils.quoteStringSQL(value).concat("::JSON");
@@ -145,6 +152,24 @@ public class ValueJson extends Value {
             }
         }
         return new ValueJson(s);
+    }
+
+    public boolean hasKey(String key) {
+        return parsed.getType() == JSONValue.OBJECT && ((JSONObject) parsed).getFirst(key) != null;
+    }
+
+    public Value extract(String path) {
+        JSONValue value = new JSONPath(this.parsed, path).extract();
+        return ValueString.get(value.toString());
+    }
+
+    public Value query(String path) {
+        JSONValue value = new JSONPath(this.parsed, path).extract();
+        return new ValueJson(value.toString());
+    }
+
+    public Value exists(String path) {
+        return ValueBoolean.get(new JSONPath(this.parsed, path).exists());
     }
 
 }
