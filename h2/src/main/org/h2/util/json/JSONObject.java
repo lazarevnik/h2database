@@ -65,4 +65,12 @@ public class JSONObject extends JSONValue {
         return OBJECT;
     }
 
+    public boolean contains(JSONObject o) {
+        return this.members.containsAll(o.members);
+    }
+
+    public JSONValue remove(String key) {
+        this.members.removeIf(v -> v.getKey().equals(key));
+        return this;
+    }
 }

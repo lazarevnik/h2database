@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.util.StringUtils;
+import org.h2.util.json.JSONArray;
 import org.h2.util.json.JSONObject;
 import org.h2.util.json.JSONPath;
 import org.h2.util.json.JSONStringSource;
@@ -154,6 +155,15 @@ public class ValueJson extends Value {
         return new ValueJson(s);
     }
 
+    @Override
+    public Value subtract(Value v) {
+        if (parsed.getType() == JSONValue.OBJECT) {
+            JSONObject o = (JSONObject) parsed;
+            return ValueJson.get(o.remove(v.getString()).toString());
+        }
+        return this;
+    }
+
     public boolean hasKey(String key) {
         return parsed.getType() == JSONValue.OBJECT && ((JSONObject) parsed).getFirst(key) != null;
     }
@@ -170,6 +180,46 @@ public class ValueJson extends Value {
 
     public Value exists(String path) {
         return ValueBoolean.get(new JSONPath(this.parsed, path).exists());
+    }
+
+    public Value getField(String key) {
+        if (parsed.getType() == JSONValue.OBJECT) {
+            JSONObject obj = (JSONObject) parsed;
+            JSONValue res = obj.getFirst(key);
+            return res == null ? ValueNull.INSTANCE : new ValueJson(res.toString());
+        } else if (parsed.getType() == JSONValue.ARRAY && StringUtils.isNumber(key)) {
+            JSONArray arr = (JSONArray) parsed;
+            JSONValue res = arr.getElement(Integer.parseInt(key));
+            return res == null ? ValueNull.INSTANCE : new ValueJson(res.toString());
+        } else {
+            return ValueNull.INSTANCE;
+        }
+    }
+
+    public Value getFieldPath(ValueArray path) {
+        ValueJson tmp = this;
+        for (Value v : path.getList()) {
+            Value next = tmp.getField(v.getString());
+            if (next.getType() == Value.NULL) {
+                return next;
+            } else {
+                tmp = (ValueJson) next;
+            }
+        }
+        return tmp;
+    }
+
+    public ValueBoolean contains(ValueJson right) {
+        JSONValue vl = parsed;
+        JSONValue vr = right.parsed;
+
+        if (vl.getType() == JSONValue.OBJECT && vr.getType() == JSONValue.OBJECT) {
+            return ValueBoolean.get(((JSONObject) vl).contains((JSONObject) vr));
+        }
+        if (vl.getType() == JSONValue.ARRAY && vr.getType() == JSONValue.ARRAY) {
+            return ValueBoolean.get(((JSONArray) vl).contains((JSONArray) vr));
+        }
+        return ValueBoolean.FALSE;
     }
 
 }

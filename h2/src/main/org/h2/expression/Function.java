@@ -140,6 +140,10 @@ public class Function extends Expression implements FunctionCall {
      */
     public static final int JSON_EXISTS = 260, JSON_EXTRACT = 261, JSON_QUERY = 262;
 
+    public static final int PG_JSON_FIELD = 350, PG_JSON_FIELD_TEXT = 351, PG_JSON_FIELD_PATH = 352,
+            PG_JSON_FIELD_PATH_TEXT = 353, PG_JSON_CONTAINS = 354, PG_JSON_EXISTS = 355, PG_JSON_EXISTS_ANY = 356,
+            PG_JSON_EXISTS_ALL = 357, PG_JSON_CONCAT = 358, PG_JSON_DELETE_FIELD = 359;
+
     /**
      * This is called H2VERSION() and not VERSION(), because we return a fake
      * value for VERSION() when running under the PostgreSQL ODBC driver.
@@ -476,6 +480,17 @@ public class Function extends Expression implements FunctionCall {
         addFunction("JSON_EXISTS", JSON_EXISTS, 2, Value.BOOLEAN, false, true, false);
         addFunction("JSON_EXTRACT", JSON_EXTRACT, 2, Value.STRING, false, true, false);
         addFunction("JSON_QUERY", JSON_QUERY, 2, Value.JSON, false, true, false);
+
+        addFunction("PG_JSON_FIELD", PG_JSON_FIELD, 2, Value.JSON);
+        addFunction("PG_JSON_FIELD_TEXT", PG_JSON_FIELD_TEXT, 2, Value.STRING);
+        addFunction("PG_JSON_FIELD_PATH", PG_JSON_FIELD_PATH, 2, Value.JSON);
+        addFunction("PG_JSON_FIELD_PATH_TEXT", PG_JSON_FIELD_PATH_TEXT, 2, Value.STRING);
+        addFunction("PG_JSON_CONTAINS", PG_JSON_CONTAINS, 2, Value.BOOLEAN);
+        addFunction("PG_JSON_EXISTS", PG_JSON_EXISTS, 2, Value.BOOLEAN);
+        addFunction("PG_JSON_EXISTS_ANY", PG_JSON_EXISTS_ANY, 2, Value.BOOLEAN);
+        addFunction("PG_JSON_EXISTS_ALL", PG_JSON_EXISTS_ALL, 2, Value.BOOLEAN);
+        addFunction("PG_JSON_CONCAT", PG_JSON_CONCAT, 2, Value.JSON);
+        addFunction("PG_JSON_DELETE_FIELD", PG_JSON_DELETE_FIELD, 2, Value.JSON);
     }
 
     protected Function(Database database, FunctionInfo info) {
@@ -1672,6 +1687,75 @@ public class Function extends Expression implements FunctionCall {
             ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
             return json.extract(v1.getString());
         }
+        case PG_JSON_FIELD: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            return json.getField(v1.getString());
+        }
+         case PG_JSON_FIELD_TEXT: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            String tag = v1.getString();
+            Value res = json.getField(tag);
+            if (res.getType() == Value.NULL) {
+                return res;
+            } else {
+                return ValueString.get(res.getString());
+            }
+         }
+        case PG_JSON_FIELD_PATH: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            if (v1.getType() != Value.ARRAY)
+                throw DbException.throwInternalError("Path must be in array");
+            return json.getFieldPath((ValueArray) v1);
+        }
+        case PG_JSON_FIELD_PATH_TEXT: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            if (v1.getType() != Value.ARRAY)
+                throw DbException.throwInternalError("Path should be in array");
+            Value res = json.getFieldPath((ValueArray) v1);
+            if (res.getType() == Value.NULL) {
+                return res;
+            } else {
+                return ValueString.get(res.getString());
+            }
+        }
+        case PG_JSON_EXISTS: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            return json.getField(v1.getString()) == ValueJson.NULL ? ValueBoolean.FALSE : ValueBoolean.TRUE;
+        }
+        case PG_JSON_EXISTS_ANY: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            if (v1.getType() != Value.ARRAY)
+                throw DbException.throwInternalError("Fields should be in array");
+            for (Value v : ((ValueArray) v1).getList()) {
+                if (json.getField(v.getString()) != ValueJson.NULL)
+                    return ValueBoolean.TRUE;
+            }
+            return ValueBoolean.FALSE;
+        }
+        case PG_JSON_EXISTS_ALL: {
+            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            if (v1.getType() != Value.ARRAY)
+                throw DbException.throwInternalError("Fields should be in array");
+            for (Value v : ((ValueArray) v1).getList()) {
+                if (json.getField(v.getString()) == ValueJson.NULL)
+                    return ValueBoolean.FALSE;
+            }
+            return ValueBoolean.TRUE;
+        }
+        case PG_JSON_CONTAINS: {
+            ValueJson jsonLeft = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson jsonRight = (ValueJson) v1.convertTo(Value.JSON);
+            return jsonLeft.contains(jsonRight);
+        }
+        // case PG_JSON_DELETE_FIELD: {
+        // if(v0.getValueType() == Value.JSON) {
+        // result = v0.subtract(v1);
+        // } else {
+        // throw DbException.throwInternalError("cannot get json field of
+        // non-json " + v0.getString());
+        // }
+        // break;
+        // }
         default:
             throw DbException.throwInternalError("type=" + info.type);
         }

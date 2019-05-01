@@ -115,7 +115,7 @@ public class Operation extends Expression {
             r = null;
         } else {
             r = right.getValue(session);
-            if (convertRight) {
+            if (convertRight && l.getType() != Value.JSON) {
                 r = r.convertTo(dataType);
             }
         }

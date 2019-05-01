@@ -48,4 +48,8 @@ public class JSONArray extends JSONValue {
         return elements.get(idx);
     }
 
+    public boolean contains(JSONArray a) {
+        return this.elements.containsAll(a.elements);
+    }
+
 }

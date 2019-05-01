@@ -37,4 +37,9 @@ public abstract class JSONValue {
         return target.getResult();
     }
 
+    @Override
+    public boolean equals(Object v) {
+        return this.toString().equals(v.toString());
+    }
+
 }
