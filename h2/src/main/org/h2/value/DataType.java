@@ -981,7 +981,10 @@ public class DataType {
             x = Utils.getNonPrimitiveClass(x);
         }
         if (String.class == x) {
-            return Value.STRING;
+            /*
+             * Temporary value for testing JSON operations
+             */
+            return Value.JSON;
         } else if (Integer.class == x) {
             return Value.INT;
         } else if (Long.class == x) {

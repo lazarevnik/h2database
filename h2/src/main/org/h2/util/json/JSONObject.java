@@ -52,11 +52,20 @@ public class JSONObject extends JSONValue {
      *         {@code null}
      */
     public JSONValue getFirst(String name) {
-        for (SimpleImmutableEntry<String, JSONValue> entry : members) {
+        /*
+         * In case of using iterators may decrease performance
+         */
+        for (int i = 0; i < members.size(); i++) {
+            SimpleImmutableEntry<String, JSONValue> entry = members.get(i);
             if (name.equals(entry.getKey())) {
                 return entry.getValue();
             }
         }
+        // for (SimpleImmutableEntry<String, JSONValue> entry : members) {
+        // if (name.equals(entry.getKey())) {
+        // return entry.getValue();
+        // }
+        // }
         return null;
     }
     
