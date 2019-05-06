@@ -44,6 +44,12 @@ public class ValueJson extends Value {
         JSONStringSource.parse(this.value, target);
         this.parsed = target.getResult();
     }
+
+    private ValueJson(JSONValue value) {
+        this.parsed = value;
+        this.value = value.toString();
+    }
+
     @Override
     public String getSQL() {
         return StringUtils.quoteStringSQL(value).concat("::JSON");
@@ -97,6 +103,10 @@ public class ValueJson extends Value {
         return other instanceof ValueJson && value.equals(((ValueJson) other).value);
     }
     
+    public static ValueJson get(JSONValue v) {
+        return new ValueJson(v);
+    }
+
     public static ValueJson get(String s) {
         try {
             s = JSONStringSource.normalize(s);
@@ -159,7 +169,7 @@ public class ValueJson extends Value {
     public Value subtract(Value v) {
         if (parsed.getType() == JSONValue.OBJECT) {
             JSONObject o = (JSONObject) parsed;
-            return ValueJson.get(o.remove(v.getString()).toString());
+            return ValueJson.get(o);
         }
         return this;
     }
@@ -186,11 +196,11 @@ public class ValueJson extends Value {
         if (parsed.getType() == JSONValue.OBJECT) {
             JSONObject obj = (JSONObject) parsed;
             JSONValue res = obj.getFirst(key);
-            return res == null ? ValueNull.INSTANCE : new ValueJson(res.toString());
+            return res == null ? ValueNull.INSTANCE : ValueJson.get(res);
         } else if (parsed.getType() == JSONValue.ARRAY && StringUtils.isNumber(key)) {
             JSONArray arr = (JSONArray) parsed;
             JSONValue res = arr.getElement(Integer.parseInt(key));
-            return res == null ? ValueNull.INSTANCE : new ValueJson(res.toString());
+            return res == null ? ValueNull.INSTANCE : ValueJson.get(res);
         } else {
             return ValueNull.INSTANCE;
         }

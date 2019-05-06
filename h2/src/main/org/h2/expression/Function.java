@@ -1688,11 +1688,21 @@ public class Function extends Expression implements FunctionCall {
             return json.extract(v1.getString());
         }
         case PG_JSON_FIELD: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             return json.getField(v1.getString());
         }
          case PG_JSON_FIELD_TEXT: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             String tag = v1.getString();
             Value res = json.getField(tag);
             if (res.getType() == Value.NULL) {
@@ -1702,13 +1712,23 @@ public class Function extends Expression implements FunctionCall {
             }
          }
         case PG_JSON_FIELD_PATH: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             if (v1.getType() != Value.ARRAY)
                 throw DbException.throwInternalError("Path must be in array");
             return json.getFieldPath((ValueArray) v1);
         }
         case PG_JSON_FIELD_PATH_TEXT: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             if (v1.getType() != Value.ARRAY)
                 throw DbException.throwInternalError("Path should be in array");
             Value res = json.getFieldPath((ValueArray) v1);
@@ -1719,11 +1739,21 @@ public class Function extends Expression implements FunctionCall {
             }
         }
         case PG_JSON_EXISTS: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             return json.getField(v1.getString()) == ValueJson.NULL ? ValueBoolean.FALSE : ValueBoolean.TRUE;
         }
         case PG_JSON_EXISTS_ANY: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             if (v1.getType() != Value.ARRAY)
                 throw DbException.throwInternalError("Fields should be in array");
             for (Value v : ((ValueArray) v1).getList()) {
@@ -1733,18 +1763,33 @@ public class Function extends Expression implements FunctionCall {
             return ValueBoolean.FALSE;
         }
         case PG_JSON_EXISTS_ALL: {
-            ValueJson json = (ValueJson) v0.convertTo(Value.JSON);
+            ValueJson json;
+            if (v0.getType() == Value.JSON) {
+                json = (ValueJson) v0;
+            } else {
+                json = (ValueJson) v0.convertTo(Value.JSON);
+            }
             if (v1.getType() != Value.ARRAY)
                 throw DbException.throwInternalError("Fields should be in array");
             for (Value v : ((ValueArray) v1).getList()) {
-                if (json.getField(v.getString()) == ValueJson.NULL)
+                if (json.getField(v.getString()) == ValueNull.INSTANCE)
                     return ValueBoolean.FALSE;
             }
             return ValueBoolean.TRUE;
         }
         case PG_JSON_CONTAINS: {
-            ValueJson jsonLeft = (ValueJson) v0.convertTo(Value.JSON);
-            ValueJson jsonRight = (ValueJson) v1.convertTo(Value.JSON);
+            ValueJson jsonLeft;
+            if (v0.getType() == Value.JSON) {
+                jsonLeft = (ValueJson) v0;
+            } else {
+                jsonLeft = (ValueJson) v0.convertTo(Value.JSON);
+            }
+            ValueJson jsonRight;
+            if (v0.getType() == Value.JSON) {
+                jsonRight = (ValueJson) v1;
+            } else {
+                jsonRight = (ValueJson) v1.convertTo(Value.JSON);
+            }
             return jsonLeft.contains(jsonRight);
         }
         // case PG_JSON_DELETE_FIELD: {
