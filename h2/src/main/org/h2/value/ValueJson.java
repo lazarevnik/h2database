@@ -77,6 +77,10 @@ public class ValueJson extends Value {
         return value;
     }
 
+    public JSONValue getParsed() {
+        return parsed;
+    }
+
     @Override
     public Object getObject() {
         return value;

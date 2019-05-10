@@ -38,6 +38,7 @@ import org.h2.tools.SimpleResultSet;
 import org.h2.util.JdbcUtils;
 import org.h2.util.LocalDateTimeUtils;
 import org.h2.util.Utils;
+import org.h2.util.json.JSONValue;
 
 /**
  * This class contains meta data information about data types,
@@ -824,7 +825,7 @@ public class DataType {
         case Value.GEOMETRY:
             return GEOMETRY_CLASS_NAME;
         case Value.JSON:
-            return String.class.getName();
+            return JSONValue.class.getName();
         default:
             if (JdbcUtils.customDataTypesHandler != null) {
                 return JdbcUtils.customDataTypesHandler.getDataTypeClassName(type);
@@ -939,6 +940,7 @@ public class DataType {
         case Types.LONGVARBINARY:
             return Value.BYTES;
         case Types.OTHER:
+            return Value.JSON;
         case Types.JAVA_OBJECT:
             return Value.JAVA_OBJECT;
         case Types.DATE:
@@ -1045,6 +1047,8 @@ public class DataType {
             return Value.TIMESTAMP;
         } else if (LocalDateTimeUtils.OFFSET_DATE_TIME == x || LocalDateTimeUtils.INSTANT == x) {
             return Value.TIMESTAMP_TZ;
+        } else if (JSONValue.class == x) {
+            return Value.JSON;
         } else {
             if (JdbcUtils.customDataTypesHandler != null) {
                 return JdbcUtils.customDataTypesHandler.getTypeIdFromClass(x);

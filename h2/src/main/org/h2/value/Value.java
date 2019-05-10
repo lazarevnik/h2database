@@ -30,6 +30,7 @@ import org.h2.util.DateTimeUtils;
 import org.h2.util.JdbcUtils;
 import org.h2.util.MathUtils;
 import org.h2.util.StringUtils;
+import org.h2.util.json.JSONValue;
 
 /**
  * This is the base class for all value classes.
@@ -1269,6 +1270,8 @@ public abstract class Value {
         case STRING_FIXED:
         case CLOB:
             return ValueJson.get(getString());
+        case JAVA_OBJECT:
+            ValueJson.get((JSONValue) getObject());
         default:
             throw getDataConversionError(Value.JSON);
         }
