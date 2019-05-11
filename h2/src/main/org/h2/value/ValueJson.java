@@ -35,24 +35,25 @@ public class ValueJson extends Value {
      */
     public static final ValueJson ZERO = new ValueJson("0");
 
-    private final String value;
+    // private final String value;
     private final JSONValue parsed;
 
     private ValueJson(String value) {
-        this.value = value;
+        // this.value = value;
         JSONValueTarget target = new JSONValueTarget();
-        JSONStringSource.parse(this.value, target);
+        JSONStringSource.parse(value, target);
         this.parsed = target.getResult();
+
     }
 
     private ValueJson(JSONValue value) {
         this.parsed = value;
-        this.value = value.toString();
+        // this.value = value.toString();
     }
 
     @Override
     public String getSQL() {
-        return StringUtils.quoteStringSQL(value).concat("::JSON");
+        return StringUtils.quoteStringSQL(getString()).concat("::JSON");
     }
 
     @Override
@@ -74,7 +75,7 @@ public class ValueJson extends Value {
 
     @Override
     public String getString() {
-        return value;
+        return parsed.toString();
     }
 
     public JSONValue getParsed() {
@@ -83,28 +84,28 @@ public class ValueJson extends Value {
 
     @Override
     public Object getObject() {
-        return value;
+        return parsed;
     }
 
     @Override
     public void set(PreparedStatement prep, int parameterIndex) throws SQLException {
-        prep.setString(parameterIndex, value);
+        prep.setString(parameterIndex, getString());
     }
 
     @Override
     protected int compareSecure(Value v, CompareMode mode) {
-        String other = ((ValueJson) v).value;
-        return mode.compareString(value, other, false);
+        String other = ((ValueJson) v).toString();
+        return mode.compareString(parsed.toString(), other, false);
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return getString().hashCode();
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof ValueJson && value.equals(((ValueJson) other).value);
+        return other instanceof ValueJson && parsed.equals(((ValueJson) other).parsed);
     }
     
     public static ValueJson get(JSONValue v) {
